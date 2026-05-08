@@ -1,0 +1,18 @@
+{
+  "name": "Budget Courses",
+  "short_name": "Courses",
+  "description": "Suivi budget courses et prix par enseigne",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
