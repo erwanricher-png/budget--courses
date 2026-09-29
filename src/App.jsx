@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Trash2, Upload, Download, ShoppingCart, AlertTriangle, CheckCircle2, Euro, Store, CalendarDays, RefreshCw } from "lucide-react";
+import { Search, Plus, Trash2, Upload, Download, ShoppingCart, AlertTriangle, CheckCircle2, Euro, Store, CalendarDays, RefreshCw, Tag, ExternalLink } from "lucide-react";
 import './App.css'
 
 const DEFAULT_STORES = ["Aldi", "Lidl", "Intermarché", "Carrefour", "Auchan", "Leclerc"];
+
+const PROMOTION_CATALOGUES = [
+  { store: "Aldi", url: "https://www.aldi.fr/catalogues.html", note: "Catalogue et offres de la semaine" },
+  { store: "Lidl", url: "https://www.lidl.fr/c/catalogues-en-ligne/s10017753", note: "Prospectus et offres en cours" },
+  { store: "Intermarché", url: "https://www.intermarche.com/catalogues", note: "Catalogues selon votre magasin" },
+  { store: "Carrefour", url: "https://www.carrefour.fr/catalogue", note: "Promotions et catalogues en ligne" },
+  { store: "Auchan", url: "https://www.auchan.fr/catalogue/", note: "Catalogue et promotions Auchan" },
+  { store: "Leclerc", url: "https://www.e.leclerc/prospectus", note: "Prospectus et offres E.Leclerc" }
+];
 
 const DEFAULT_PRODUCTS = [
   { id: crypto.randomUUID(), name: "Pâtes", category: "Féculents", unit: "kg", qty: 2, prices: { Aldi: 1.30, Lidl: 1.40, Intermarché: 1.55 }, source: "Base manuelle", promoUntil: "" },
@@ -58,6 +67,7 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem("budgetCourses_expenses")) || []; } catch { return []; }
   });
   const [selectedStoreMode, setSelectedStoreMode] = useState("meilleur");
+  const [activeTab, setActiveTab] = useState("courses");
   const [search, setSearch] = useState("");
   const [newProduct, setNewProduct] = useState({ name: "", category: "Placard", unit: "unité", qty: 1 });
   const [newExpense, setNewExpense] = useState({ label: "", store: "Aldi", amount: "", date: new Date().toISOString().slice(0, 10) });
@@ -196,14 +206,19 @@ export default function App() {
           </div>
         </motion.div>
 
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Sections de l’application">
+          <button role="tab" aria-selected={activeTab === "courses"} onClick={() => setActiveTab("courses")} className={`rounded-xl px-4 py-2 font-semibold ${activeTab === "courses" ? "bg-slate-900 text-white" : "bg-white border border-slate-200 text-slate-700"}`}>Mes courses</button>
+          <button role="tab" aria-selected={activeTab === "promotions"} onClick={() => setActiveTab("promotions")} className={`rounded-xl px-4 py-2 font-semibold ${activeTab === "promotions" ? "bg-emerald-700 text-white" : "bg-white border border-slate-200 text-slate-700"}`}>Promotions</button>
+        </div>
+
+        <div className={`grid md:grid-cols-4 gap-4 ${activeTab === "courses" ? "" : "hidden"}`}>
           <StatCard title="Budget semaine" value={euro(budget)} icon={<Euro />} />
           <StatCard title="Dépensé réel" value={euro(spentTotal)} icon={<ShoppingCart />} danger={spentTotal > budget} />
           <StatCard title="Reste disponible" value={euro(remaining)} icon={remaining >= 0 ? <CheckCircle2 /> : <AlertTriangle />} danger={remaining < 0} />
           <StatCard title="Panier prévu" value={euro(plannedTotal)} icon={<Store />} danger={plannedTotal > budget} subtitle={plannedGap >= 0 ? `Marge ${euro(plannedGap)}` : `Dépassement ${euro(Math.abs(plannedGap))}`} />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className={`grid lg:grid-cols-3 gap-6 ${activeTab === "courses" ? "" : "hidden"}`}>
           <section className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
@@ -309,7 +324,23 @@ export default function App() {
           </section>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+        <section className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 ${activeTab === "promotions" ? "" : "hidden"}`} aria-labelledby="promotions-title">
+          <div className="mb-5">
+            <h2 id="promotions-title" className="text-xl font-bold flex items-center gap-2"><Tag size={20}/> Promotions par magasin</h2>
+            <p className="text-sm text-slate-600 mt-1">Ouvre le catalogue officiel de chaque enseigne pour consulter ses produits en promotion sur internet.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {PROMOTION_CATALOGUES.map(({ store, url, note }) => (
+              <article key={store} className="rounded-2xl border border-slate-200 p-4 bg-slate-50 flex flex-col gap-3">
+                <div><h3 className="font-bold text-lg">{store}</h3><p className="text-sm text-slate-600">{note}</p></div>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 text-white px-4 py-3 font-semibold hover:bg-emerald-800">Voir les promotions <ExternalLink size={16}/></a>
+              </article>
+            ))}
+          </div>
+          <p className="mt-5 text-sm text-slate-500 bg-amber-50 border border-amber-100 rounded-xl p-3">Les offres changent selon la période et parfois selon le magasin. Les prix et produits sont affichés par les enseignes sur leurs sites officiels ; ils ne sont pas importés automatiquement dans cette application.</p>
+        </section>
+
+        <div className={`bg-white rounded-2xl shadow-sm border border-slate-200 p-5 ${activeTab === "courses" ? "" : "hidden"}`}>
           <h2 className="text-xl font-bold mb-3">Règle d'utilisation</h2>
           <div className="grid md:grid-cols-3 gap-4 text-sm text-slate-600">
             <div className="bg-slate-50 rounded-2xl p-4"><b>1. Chaque semaine</b><br/>Tu importes ou saisis les prix vus dans les catalogues Anti-Crise, Lidl, Aldi, Intermarché, Carrefour, etc.</div>
